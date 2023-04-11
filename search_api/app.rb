@@ -2,7 +2,11 @@ require 'sinatra'
 require_relative '../elasticsearch/elasticsearch_client'
 
 # Create a new ElasticSearch client
-client = Elasticsearch::Client.new log: true
+client = ElasticsearchClient.client
+
+before do
+  content_type 'application/json'
+end
 
 # Define the API endpoint for search requests
 get '/search' do
@@ -55,6 +59,6 @@ get '/index_data' do
     # Index data from JSON file
     filepath = "/app/tmp/movies.jsonl"
     ElasticsearchClient.bulk_index_ndjson('movies', filepath)
-    "Indexing Complete"
     puts("indexing complete")
+    "Indexing Complete"
 end
