@@ -20,7 +20,7 @@ services:
     ports:
       - 9200:9200
     networks:
-      - elastic
+      - search
 
   es02:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
@@ -42,7 +42,7 @@ services:
     ports:
       - 9201:9201
     networks:
-      - elastic
+      - search
 
   es03:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
@@ -64,7 +64,7 @@ services:
     ports:
       - 9202:9202
     networks:
-      - elastic
+      - search
 
   kib01:
     image: docker.elastic.co/kibana/kibana:8.7.0
@@ -75,17 +75,29 @@ services:
       ELASTICSEARCH_URL: http://es01:9200
       ELASTICSEARCH_HOSTS: http://es01:9200
     networks:
-      - elastic
+      - search
 
   search_api:
     build: .
     container_name: search_api
     ports:
-      - "4567:4567"
+      - 4567:4567
     networks:
-      - elastic
+      - search
     volumes:
       - .:/app
+
+  metarank:
+    image: metarank/metarank:latest
+    command: standalone --config /opt/metarank/config.yml --data /opt/metarank/events.jsonl.gz
+    ports:
+      - 8080:8080
+    volumes:
+      - ./metarank:/opt/metarank
+    networks:
+      - search
+    environment:
+       - "JAVA_OPTS=-Xms5g -Xmx5g"
 
 volumes:
   data01:
@@ -98,5 +110,5 @@ volumes:
   
 
 networks:
-  elastic:
+  search:
     driver: bridge
