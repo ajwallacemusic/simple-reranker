@@ -14,6 +14,7 @@ before do
   content_type 'application/json'
 end
 
+# builds the elasticsearch query
 def build_es_query(query)
   result = {
     _source: ["title","id"],
@@ -32,7 +33,7 @@ def build_es_query(query)
   return result
 end
 
-# Define the API endpoint for search requests
+# Searches elasticsearch
 get '/search' do
   # Get the search query from the request parameters
   query = params['q']
@@ -68,6 +69,7 @@ get '/search' do
   hits.map { |hit| hit['_source'] }.to_json
 end
 
+# send an elasticsearch query and then rerank via metarank
 get '/rerank' do
   query = params['q']
 
@@ -77,6 +79,7 @@ get '/rerank' do
   # Execute the search query against the 'movies' index
   es_results = client.search index: 'movies', body: es_query
   hits = es_results['hits']['hits']
+
   #send rank event to metarank
   ids = hits.map { |hit| hit['_source']['id'] }
   id_array = ids.map { |id| { "id" => id.to_s } }
@@ -92,10 +95,23 @@ get '/rerank' do
   }
   json_string = JSON.generate(json_obj)
 
+  # get the metarank response, parse into json and get the items array
   response = Faraday.post(metrank_rerank_url, json_string)
-  response.body
+  body = JSON.parse(response.body)
+  items = body["items"]
+
+  result_array = []
+
+  # hydrate movie data from elasticsearch for each item id
+  items.each do |item|
+    doc = client.get(index: 'movies', id: item['item'])
+    item_json = {"id": doc['_source']['id'], "title": doc['_source']['title']}
+    result_array << item_json
+  end
+  return result_array.to_json
 end
 
+# get a single movie by id
 get '/movie/:id' do |id|
     # stuff
     id = id
