@@ -8,6 +8,9 @@ After downloading and running the `docker-compose up` command, you should be abl
 - Rerank the search request via the `/rerank` endpoint.
 - Send click events to metarank and get personalized reranking results.
 
+https://user-images.githubusercontent.com/24554274/231280250-665118f0-9ce3-4e2d-bccf-0745a46afb8d.mp4
+
+
 ### Initial Elasticsearch Query for "toy"
 ```
 GET http://localhost:4567/search?q=toy
